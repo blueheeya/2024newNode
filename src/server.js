@@ -34,7 +34,7 @@ const server = async function(){
             try {
                 const user = new User(req.body);
                 await user.save();
-                res.send(user);
+                return res.send({user});
             } catch(error) {
                 return res.status(500).send({error:error.message});
             }
@@ -50,13 +50,26 @@ const server = async function(){
                 return res.status(500).send({error:error.message});
             }
         })
-        app.listen(3000) //로컬 서버 포트 지정
+        app.put("/user/:userId", async function(req,res){
+            try {
+                let {age} = req.body;
+                const {userId} = req.params;
+                const user = await User.findByIdAndUpdate(
+                    userID,
+                    {$set : {age}},
+                    {new:true}
+                  );
+                return res.send({user});
+            } catch(error) {
+                return res.status(500).send({error:error.message});
+            }
+        });
+
+    app.listen(3000) //로컬 서버 포트 지정
     } catch (error) {
         // return res.send({error :error.massage})
         console.log("연결 안됨")
     }
-
-
 }
 
 server();
