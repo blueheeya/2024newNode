@@ -1,75 +1,35 @@
-const express = require("express");
-const { default: mongoose } = require("mongoose");
-const app = express();
-const {User} = require("./models/User")
+const express = require('express')
+const app = express()
+const mongoose = require("mongoose")
 const dotenv = require("dotenv");
+const { userRouter } = require('./routers/userRouter.js');
+const { blogRouter } = require('./routers/blogRouter.js');
+const { commentRouter } = require('./routers/commentRouter.js');
 
 dotenv.config();
+//process.env.MONGO_URL
 
-const server = async function(){
-    // const users = []
-    try{
-        await mongoose.connect(process.env.MONGO_URL);
-        console.log("DB 연결 완료");
-        app.use(express.json());
 
-        app.get("/user", async function(req,res){
-            try {
-                const users = await User.find({})
-                return res.send({users});
-            } catch(error) {
-                return res.status(500).send({error:error.message})
-            }
-        });
-        app.get("/user/:userId",async function(req,res){
-            try{
-                const {userId} = req.params
-                const user = await User.findOne({_id:userId});
-                return res.send({user});
-            } catch(error) {
-                return res.status(500).send({error:error.message});
-            }
-        });
-        app.post("/user", async function(req,res){
-            try {
-                const user = new User(req.body);
-                await user.save();
-                return res.send({user});
-            } catch(error) {
-                return res.status(500).send({error:error.message});
-            }
-            
-        });
+// let result = mongoose.connect(MONGO_URL); //promise
 
-        app.delete("/user/:userId", async function(req,res){
-            try{
-                const {userId} = req.params;
-                const user = await User.findByIdAndDelet({_id:userId});
-                return res.send({user});
-            } catch(error) {
-                return res.status(500).send({error:error.message});
-            }
-        })
-        app.put("/user/:userId", async function(req,res){
-            try {
-                let {age} = req.body;
-                const {userId} = req.params;
-                const user = await User.findByIdAndUpdate(
-                    userID,
-                    {$set : {age}},
-                    {new:true}
-                  );
-                return res.send({user});
-            } catch(error) {
-                return res.status(500).send({error:error.message});
-            }
-        });
+// mongoose.connect(MONGO_URL).then(function(result){
+//   return console.log(result);
+// });
 
-    app.listen(3000) //로컬 서버 포트 지정
-    } catch (error) {
-        // return res.send({error :error.massage})
-        console.log("연결 안됨")
-    }
+async function server() {
+  try {
+    await mongoose.connect(process.env.MONGO_URL); //promise
+    console.log("db connected");
+    mongoose.set("debug",true); //2024.03.21 추가 사항
+    app.use(express.json()) //json 언어로 변경하기
+    app.use("/user",userRouter)
+    app.use("/blog",blogRouter)
+    app.use("/blog/:blogId/comment",commentRouter)
+    
+
+    app.listen(3000)
+  } catch (error) {
+    console.log("잘못 연결")
+  }
 }
-
 server();
